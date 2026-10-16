@@ -21,10 +21,10 @@ public class Book {
     @Column(nullable = false)
     private String title;
 
-    @Column(nullable = false)
+    @ManyToOne
     private Author author;
 
-    @Column(nullable = false)
+    @ManyToOne
     private Genre genre;
 
     @Column(nullable = false)
