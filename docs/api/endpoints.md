@@ -622,7 +622,7 @@ Devolver de novo o mesmo empréstimo: `409`, `Este empréstimo já foi devolvido
 ## CORS
 
 - Origens liberadas: propriedade `app.cors.allowed-origins` (lista separada por vírgula). Padrão: `http://localhost:5173` (Vite em desenvolvimento) e `http://localhost:4173` (`vite preview`).
-- Para mudar, use a propriedade no `application.properties`, o argumento `--app.cors.allowed-origins=...` ou a variável de ambiente `APP_CORS_ALLOWED_ORIGINS`. Na stack Docker o `docker-compose.yml` já acrescenta `http://localhost:${FRONTEND_PORT:-8081}`.
+- Para mudar, use a propriedade no `application.properties`, o argumento `--app.cors.allowed-origins=...` ou a variável de ambiente `APP_CORS_ALLOWED_ORIGINS`. No `docker-compose.yml` o padrão é o mesmo (`APP_CORS_ALLOWED_ORIGINS`). O frontend em container não precisa estar na lista, porque o Nginx dele repassa `/api` sem o header `Origin`.
 - Métodos liberados: `GET`, `POST`, `PUT`, `PATCH`, `DELETE`, `OPTIONS`. Headers de requisição: qualquer um. Header exposto ao navegador: `Location`. Credenciais (cookies) não são liberadas.
 - O preflight (`OPTIONS`) de uma origem liberada responde `200` com `Access-Control-Allow-Origin`, `Access-Control-Allow-Methods`, `Access-Control-Expose-Headers: Location` e `Access-Control-Max-Age: 1800`.
 - Origem não liberada (no preflight ou na requisição real) recebe `403` com `Content-Type: application/json` e o corpo ApiError:

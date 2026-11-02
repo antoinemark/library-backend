@@ -98,15 +98,16 @@ São 77 testes de integração e unitários (MockMvc sobre o H2), cobrindo os co
 
 ## Docker
 
-O `Dockerfile` e o `docker-compose.yml` ficam neste repositório. O compose sobe a stack completa (backend e frontend) e espera os dois repositórios lado a lado.
+O `Dockerfile` e o `docker-compose.yml` deste repositório cuidam só da API. O frontend tem o próprio Dockerfile e compose, no repositório irmão. Os dois containers ficam separados e se enxergam pela rede Docker `biblioteca-net`, criada uma vez.
 
 ```bash
-docker compose up -d --build        # builda as duas imagens e sobe a stack
-./scripts/build-all-images.sh       # gera as imagens e salva em images/*.tar.gz (com .sha256)
-./scripts/load-images.sh            # carrega esses arquivos em outra máquina
+docker network create biblioteca-net    # uma vez
+docker compose up -d --build            # builda a imagem e sobe a API em http://localhost:8080
+./scripts/build-image.sh                # gera a imagem e salva em images/*.tar.gz (com .sha256)
+./scripts/load-images.sh                # carrega esses arquivos em outra máquina
 ```
 
-Frontend em `http://localhost:8081` e API em `http://localhost:8080`. Portas, variáveis, fuso horário e o passo a passo para levar as imagens a outra máquina em [Docker: imagens e stack](docs/docker/imagens-e-stack.md).
+Variáveis, fuso horário e como subir junto com o frontend em [Docker do backend](docs/docker/imagens-e-stack.md).
 
 ## Estrutura do projeto
 
@@ -133,5 +134,5 @@ O console do H2 **não está disponível**: `/h2-console` responde 404. As propr
 - [Endpoints](docs/api/endpoints.md)
 - [Regras de negócio](docs/regras/regras-de-negocio.md)
 - [Modelo de dados e seed](docs/banco/modelo-e-seed.md)
-- [Docker: imagens e stack](docs/docker/imagens-e-stack.md)
+- [Docker do backend](docs/docker/imagens-e-stack.md)
 - [Documento de Análise (PDF)](docs/Documento_de_An%C3%A1lise_-_Sistema_de_Empr%C3%A9stimo.pdf)
