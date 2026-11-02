@@ -101,5 +101,7 @@ if [[ ${#LOADED[@]} -gt 0 ]]; then
 fi
 
 echo
-echo "Imagens carregadas com sucesso. Para subir a stack:"
+echo "Imagens carregadas com sucesso."
+echo "Para subir só a API (cria a rede uma vez):"
+echo "  docker network create biblioteca-net"
 echo "  docker compose -f \"$REPO_DIR/docker-compose.yml\" up -d"

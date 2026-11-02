@@ -1,30 +1,29 @@
 # =============================================================================
-# Stack completa do sistema de empréstimo de livros (backend + frontend).
+# Backend do sistema de empréstimo de livros (somente a API).
+# O frontend tem o próprio docker-compose.yml, no repositório biblioteca-web-frontend.
 #
-# Pré-requisito: os repositórios "library-backend" e "biblioteca-web-frontend"
-# precisam estar lado a lado (pastas irmãs), pois o frontend é buildado a partir
-# de ../biblioteca-web-frontend.
+# Os dois rodam em containers separados e se enxergam por uma rede Docker compartilhada,
+# a "biblioteca-net", que precisa existir (crie uma única vez):
+#   docker network create biblioteca-net
 #
 # Uso (a partir desta pasta):
-#   docker compose up -d --build   # builda as duas imagens e sobe a stack
-#   docker compose up -d           # reaproveita imagens existentes (ex.: carregadas
-#                                  # com scripts/load-images.sh); builda só se faltar
+#   docker compose up -d --build   # builda a imagem e sobe a API
+#   docker compose up -d           # reaproveita a imagem existente (ex.: carregada com
+#                                  # scripts/load-images.sh); builda só se faltar
 #   docker compose logs -f         # acompanha os logs
-#   docker compose down            # derruba a stack (o H2 é em memória: os dados somem)
+#   docker compose down            # derruba a API (o H2 é em memória: os dados somem)
 #
 # Variáveis opcionais (no ambiente ou em um arquivo .env ao lado deste arquivo):
-#   BACKEND_PORT              porta do host para a API             (padrão: 8080)
-#   FRONTEND_PORT             porta do host para o frontend        (padrão: 8081)
-#   APP_CORS_ALLOWED_ORIGINS  origens liberadas no CORS do backend (padrão: dev do Vite + frontend da stack)
-#   JAVA_OPTS                 opções extras da JVM do backend      (padrão: vazio)
-#   BACKEND_TZ                fuso horário do backend (define o "hoje") (padrão: America/Sao_Paulo)
-#   VITE_API_URL             URL base da API embutida no build do frontend (padrão: /api)
+#   BACKEND_PORT              porta do host para a API                    (padrão: 8080)
+#   APP_CORS_ALLOWED_ORIGINS  origens liberadas no CORS do backend         (padrão: dev do Vite)
+#   JAVA_OPTS                 opções extras da JVM                         (padrão: vazio)
+#   BACKEND_TZ                fuso horário (define o "hoje")               (padrão: America/Sao_Paulo)
 #
-# Acesso: frontend em http://localhost:${FRONTEND_PORT} e API em http://localhost:${BACKEND_PORT}.
-# O frontend chama /api/... no próprio Nginx, que repassa ao backend removendo o prefixo /api.
+# A API fica em http://localhost:${BACKEND_PORT}. Os outros containers da rede biblioteca-net
+# a alcançam por http://library-backend:8080.
 # =============================================================================
 
-name: biblioteca
+name: library-backend
 
 services:
   library-backend:
@@ -33,29 +32,18 @@ services:
     ports:
       - "${BACKEND_PORT:-8080}:8080"
     environment:
-      # Mapeado pelo Spring para a propriedade app.cors.allowed-origins
-      APP_CORS_ALLOWED_ORIGINS: "${APP_CORS_ALLOWED_ORIGINS:-http://localhost:5173,http://localhost:4173,http://localhost:${FRONTEND_PORT:-8081}}"
-      # Os headers X-Forwarded-* do Nginx (Location dos 201 com /api) já são considerados
-      # pelo application.properties (server.forward-headers-strategy=framework).
+      # Mapeado pelo Spring para a propriedade app.cors.allowed-origins. O frontend em container
+      # não precisa estar na lista: o Nginx dele repassa /api sem o header Origin.
+      APP_CORS_ALLOWED_ORIGINS: "${APP_CORS_ALLOWED_ORIGINS:-http://localhost:5173,http://localhost:4173}"
       JAVA_OPTS: "${JAVA_OPTS:-}"
       # Fuso horário da JVM: define a "data de hoje" (status, devolução e datas do seed).
       # O Dockerfile já usa America/Sao_Paulo; aqui ele pode ser trocado sem rebuildar a imagem.
       TZ: "${BACKEND_TZ:-America/Sao_Paulo}"
-    # O healthcheck vem do Dockerfile (GET /genres); o frontend só sobe quando ele passar.
+    networks:
+      - biblioteca-net
     restart: unless-stopped
 
-  biblioteca-web-frontend:
-    image: biblioteca-web-frontend:latest
-    build:
-      context: ../biblioteca-web-frontend
-      args:
-        VITE_API_URL: "${VITE_API_URL:-/api}"
-    ports:
-      - "${FRONTEND_PORT:-8081}:80"
-    environment:
-      # Destino do proxy /api do Nginx (nome do serviço na rede interna do compose, sem barra no final)
-      API_UPSTREAM: http://library-backend:8080
-    depends_on:
-      library-backend:
-        condition: service_healthy
-    restart: unless-stopped
+networks:
+  biblioteca-net:
+    external: true
+    name: biblioteca-net
