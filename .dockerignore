@@ -1,0 +1,44 @@
+# O Dockerfile só usa pom.xml e src/: o resto fica fora do contexto de build
+# para deixá-lo pequeno e não invalidar o cache à toa.
+
+# Saídas de build e imagens geradas pelos scripts
+target/
+images/
+build/
+
+# Controle de versão
+.git
+.gitignore
+.gitattributes
+
+# IDEs e editores
+.idea
+.vscode
+.settings
+.project
+.classpath
+.factorypath
+*.iml
+*.iws
+*.ipr
+
+# Wrapper do Maven (a imagem de build já traz o Maven)
+mvnw
+mvnw.cmd
+.mvn/
+
+# Documentação
+docs/
+*.md
+
+# Arquivos de Docker e scripts auxiliares
+Dockerfile
+.dockerignore
+docker-compose.yml
+compose.yml
+scripts/
+.env
+.env.*
+
+# Logs
+*.log

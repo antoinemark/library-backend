@@ -11,12 +11,13 @@ import lombok.*;
 public class User {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
-    private long id;
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
 
     @Column(nullable = false)
     private String name;
 
-    @Column(nullable = false, unique = true)
+    // CPF armazenado somente com dígitos (11 caracteres)
+    @Column(nullable = false, unique = true, length = 11)
     private String cpf;
 }
