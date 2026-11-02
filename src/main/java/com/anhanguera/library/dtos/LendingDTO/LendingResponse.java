@@ -1,14 +1,18 @@
 package com.anhanguera.library.dtos.LendingDTO;
 
-import com.anhanguera.library.model.Book;
-import com.anhanguera.library.model.User;
+import com.anhanguera.library.dtos.BookDTO.BookResponse;
+import com.anhanguera.library.dtos.UserDTO.UserResponse;
+import com.anhanguera.library.model.LendingStatus;
 
-import java.util.Date;
+import java.time.LocalDate;
 
 public record LendingResponse(
         Long id,
-        Date startDate,
-        Date endDate,
-        User user,
-        Book book
+        LocalDate startDate,
+        LocalDate endDate,
+        // Nulo enquanto o livro não for devolvido
+        LocalDate returnDate,
+        LendingStatus status,
+        UserResponse user,
+        BookResponse book
 ) {}

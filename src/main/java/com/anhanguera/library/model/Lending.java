@@ -5,7 +5,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.util.Date;
+import java.time.LocalDate;
 
 @Entity
 @Table(name = "lendings")
@@ -18,15 +18,23 @@ public class Lending {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false, unique = true)
-    private Date startDate;
+    // Data em que o livro foi emprestado
+    @Column(nullable = false)
+    private LocalDate startDate;
 
-    @Column(nullable = false, unique = true)
-    private Date endDate;
+    // Data prevista para a devolução
+    @Column(nullable = false)
+    private LocalDate endDate;
 
-    @ManyToOne(targetEntity = User.class)
+    // Data efetiva da devolução (nula enquanto o empréstimo estiver em aberto)
+    @Column
+    private LocalDate returnDate;
+
+    @ManyToOne(optional = false)
+    @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
-    @ManyToOne(targetEntity = Book.class)
+    @ManyToOne(optional = false)
+    @JoinColumn(name = "book_id", nullable = false)
     private Book book;
 }

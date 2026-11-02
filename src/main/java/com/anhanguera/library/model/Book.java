@@ -5,7 +5,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.util.Date;
+import java.time.LocalDate;
 
 @Entity
 @Table(name = "books")
@@ -21,14 +21,18 @@ public class Book {
     @Column(nullable = false)
     private String title;
 
-    @ManyToOne
+    // Todo livro tem exatamente um autor
+    @ManyToOne(optional = false)
+    @JoinColumn(name = "author_id", nullable = false)
     private Author author;
 
-    @ManyToOne
+    // Todo livro tem exatamente um gênero
+    @ManyToOne(optional = false)
+    @JoinColumn(name = "genre_id", nullable = false)
     private Genre genre;
 
     @Column(nullable = false)
-    private Date publishDate;
+    private LocalDate publishDate;
 
     @Column(nullable = false)
     private String publisher;
