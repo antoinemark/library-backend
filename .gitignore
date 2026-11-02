@@ -31,3 +31,6 @@ build/
 
 ### VS Code ###
 .vscode/
+
+### Imagens Docker geradas por scripts/build-image.sh ###
+images/
