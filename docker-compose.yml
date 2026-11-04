@@ -18,6 +18,7 @@
 #   APP_CORS_ALLOWED_ORIGINS  origens liberadas no CORS do backend         (padrão: dev do Vite)
 #   JAVA_OPTS                 opções extras da JVM                         (padrão: vazio)
 #   BACKEND_TZ                fuso horário (define o "hoje")               (padrão: America/Sao_Paulo)
+#   H2_CONSOLE_ALLOW_OTHERS   libera o console do H2 (/h2-console) no container (padrão: false)
 #
 # A API fica em http://localhost:${BACKEND_PORT}. Os outros containers da rede biblioteca-net
 # a alcançam por http://library-backend:8080.
@@ -39,6 +40,12 @@ services:
       # Fuso horário da JVM: define a "data de hoje" (status, devolução e datas do seed).
       # O Dockerfile já usa America/Sao_Paulo; aqui ele pode ser trocado sem rebuildar a imagem.
       TZ: "${BACKEND_TZ:-America/Sao_Paulo}"
+      # Console do H2 (/h2-console): por padrão só aceita conexões da própria máquina, e no container
+      # a requisição chega pelo gateway da rede, então fica bloqueado ("remote connections are disabled").
+      # Para usar, suba com H2_CONSOLE_ALLOW_OTHERS=true. Atenção: quem alcançar a porta da API passa a
+      # poder abrir o console (usuário admin/admin, e o console permite executar código), então só ligue
+      # em rede de confiança e desligue depois.
+      SPRING_H2_CONSOLE_SETTINGS_WEB_ALLOW_OTHERS: "${H2_CONSOLE_ALLOW_OTHERS:-false}"
     networks:
       - biblioteca-net
     restart: unless-stopped
