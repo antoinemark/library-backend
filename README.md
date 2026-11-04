@@ -127,7 +127,20 @@ Pacote base: `com.anhanguera.library` (em `src/main/java`).
 
 ## Console do H2
 
-O console do H2 **não está disponível**: `/h2-console` responde 404. As propriedades `spring.h2.console.*` estão no `application.properties`, mas, conforme o comentário ali, no Spring Boot 4 o console depende do módulo `spring-boot-h2console`, que não está no `pom.xml`. Para consultar os dados, use a própria API (Swagger UI) ou os testes.
+O console web do banco fica em `http://localhost:8080/h2-console` (ou na porta em que a API estiver rodando). Na tela de login, preencha:
+
+| Campo | Valor |
+| --- | --- |
+| Driver Class | `org.h2.Driver` |
+| JDBC URL | `jdbc:h2:mem:library` |
+| User Name | `admin` |
+| Password | `admin` |
+
+Clique em **Connect**: as tabelas (`AUTHORS`, `BOOKS`, `GENRES`, `LENDINGS` e `USERS`) aparecem na lateral e dá para rodar SQL, por exemplo `SELECT * FROM BOOKS`.
+
+- O banco é em memória e só existe enquanto a API está rodando; cada subida recria o schema e o seed. Se a JDBC URL for diferente de `jdbc:h2:mem:library`, o console conecta em um banco vazio.
+- No Spring Boot 4 o console deixou de vir no core e depende do módulo `spring-boot-h2console`, declarado no `pom.xml`. Sem ele, `/h2-console` responde 404. Se a API já estava rodando quando o módulo foi adicionado, pare e rode de novo (no IntelliJ, recarregue o projeto Maven antes).
+- Por padrão o console só aceita conexões da própria máquina (`spring.h2.console.settings.web-allow-others=false`). **No Docker** isso o bloqueia ("remote connections are disabled"), porque a requisição chega pelo gateway da rede. Para usar com o compose: `H2_CONSOLE_ALLOW_OTHERS=true docker compose up -d`. Quem alcançar a porta da API passa a poder abrir o console (e ele permite executar código), então ligue só em rede de confiança. A imagem precisa ser rebuildada (`--build`) depois dessa correção.
 
 ## Documentação
 

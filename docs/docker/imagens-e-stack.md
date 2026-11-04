@@ -14,6 +14,7 @@ O backend e o frontend são **projetos separados**: cada repositório tem o pró
 - [Levar a imagem para outra máquina](#levar-a-imagem-para-outra-máquina)
 - [Subir junto com o frontend](#subir-junto-com-o-frontend)
 - [Rodar sem o compose](#rodar-sem-o-compose)
+- [Console do H2 no container](#console-do-h2-no-container)
 - [Fuso horário](#fuso-horário)
 - [Problemas comuns](#problemas-comuns)
 
@@ -67,6 +68,7 @@ Defina no ambiente ou em um arquivo `.env` ao lado do `docker-compose.yml`. Toda
 | `APP_CORS_ALLOWED_ORIGINS` | `http://localhost:5173,http://localhost:4173` | Origens liberadas no CORS (vira a propriedade `app.cors.allowed-origins`). O frontend em container não precisa estar na lista: o Nginx dele repassa `/api` sem o header `Origin` |
 | `JAVA_OPTS` | vazio | Opções extras da JVM (ex.: `-Xmx512m`) |
 | `BACKEND_TZ` | `America/Sao_Paulo` | Fuso do backend, que define o "hoje" (veja [Fuso horário](#fuso-horário)) |
+| `H2_CONSOLE_ALLOW_OTHERS` | `false` | Libera o console do H2 (`/h2-console`) para acesso pela porta publicada. Veja [Console do H2 no container](#console-do-h2-no-container) |
 
 Exemplo, em outra porta:
 
@@ -191,6 +193,18 @@ docker network rm biblioteca-net
 
 Se uma página de outra origem chamar a API diretamente (sem passar pelo `/api` do Nginx do frontend), inclua a origem em `APP_CORS_ALLOWED_ORIGINS` (por exemplo `-e APP_CORS_ALLOWED_ORIGINS=http://localhost:8081` no `docker run`).
 
+## Console do H2 no container
+
+O console web do H2 (`/h2-console`; campos do login no [README](../../README.md#console-do-h2)) só aceita conexões da própria máquina. No container, a requisição pela porta publicada chega pelo gateway da rede e é recusada. Para liberar:
+
+```bash
+H2_CONSOLE_ALLOW_OTHERS=true docker compose up -d
+```
+
+Sem o compose, o equivalente é `-e SPRING_H2_CONSOLE_SETTINGS_WEB_ALLOW_OTHERS=true` no `docker run`. Foi testado com a imagem: sem a variável o console responde "remote connections ('webAllowOthers') are disabled"; com ela abre a tela de login.
+
+Deixe desligado (o padrão) quando a porta da API puder ser alcançada por outras pessoas: o login é `admin`/`admin` e o console permite executar código. A imagem precisa ter sido gerada depois da inclusão do módulo `spring-boot-h2console` no `pom.xml`.
+
 ## Fuso horário
 
 A data de "hoje" do backend define o status dos empréstimos (`ATRASADO`), a data padrão da devolução e as datas relativas do seed. Contêineres rodam em UTC por padrão; entre 21h e 24h (Brasília) o "hoje" em UTC já é o dia seguinte, o que deslocaria tudo isso em um dia.
@@ -213,4 +227,5 @@ Mais detalhes em [regras de negócio](../regras/regras-de-negocio.md#datas-fuso-
 | O frontend abre, mas `/api` responde 502 ou 504 | O container da API não está de pé ou não está na rede `biblioteca-net` | `docker compose ps` e `docker compose logs library-backend` |
 | Compose sobe uma versão antiga | `latest` aponta para uma imagem antiga (vários arquivos carregados) | Rode de novo o `load-images.sh` (ele reaponta `latest`) ou apague os arquivos antigos de `images/` |
 | Datas deslocadas em um dia à noite | Backend rodando em UTC | Confirme `TZ`/`BACKEND_TZ` (veja acima) |
-| `/h2-console` dá 404 | O console do H2 não está disponível neste projeto | Veja o [README](../../README.md#console-do-h2) |
+| `/h2-console` mostra "remote connections ('webAllowOthers') are disabled" | O console do H2 só aceita conexões da própria máquina, e no container a requisição chega pelo gateway da rede | Suba com `H2_CONSOLE_ALLOW_OTHERS=true docker compose up -d` (veja [Console do H2 no container](#console-do-h2-no-container)) |
+| `/h2-console` dá 404 | Imagem gerada antes de o módulo `spring-boot-h2console` entrar no `pom.xml` | Rebuilde a imagem (`docker compose up -d --build`) |

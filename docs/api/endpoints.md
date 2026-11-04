@@ -69,7 +69,7 @@ Códigos de sucesso: `200` (GET, PUT, PATCH), `201` (POST, com header `Location`
 | GET | `/swagger-ui/index.html` | Swagger UI | 200 | |
 | GET | `/v3/api-docs` | Documento OpenAPI (JSON) | 200 | |
 
-Não existe `DELETE` nem `PUT` em `/lendings`: o histórico de empréstimos nunca é apagado nem editado (essas chamadas respondem 405). Também não existe rota de console do H2 (`/h2-console` responde 404; veja o [README](../../README.md#console-do-h2)).
+Não existe `DELETE` nem `PUT` em `/lendings`: o histórico de empréstimos nunca é apagado nem editado (essas chamadas respondem 405). O console web do banco H2 fica em `/h2-console` (não faz parte da API REST; veja como entrar no [README](../../README.md#console-do-h2)).
 
 ## Formato de erro (ApiError)
 
