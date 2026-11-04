@@ -4,6 +4,8 @@ API REST do sistema de empréstimo de livros: usuários, acervo (livros, autores
 
 O frontend fica no repositório irmão [`biblioteca-web-frontend`](../biblioteca-web-frontend/README.md).
 
+Quer só subir a API, sem instalar Java nem Maven? Veja [Rodando com Docker](#rodando-com-docker).
+
 ## Sumário
 
 - [Stack](#stack)
@@ -12,7 +14,7 @@ O frontend fica no repositório irmão [`biblioteca-web-frontend`](../biblioteca
 - [Endpoints](#endpoints)
 - [Regras principais](#regras-principais)
 - [Testes](#testes)
-- [Docker](#docker)
+- [Rodando com Docker](#rodando-com-docker)
 - [Estrutura do projeto](#estrutura-do-projeto)
 - [Console do H2](#console-do-h2)
 - [Documentação](#documentação)
@@ -96,18 +98,55 @@ mvn test
 
 São 77 testes de integração e unitários (MockMvc sobre o H2), cobrindo os controllers, as regras de empréstimo, o seed e o formato de erro e CORS.
 
-## Docker
+## Rodando com Docker
 
-O `Dockerfile` e o `docker-compose.yml` deste repositório cuidam só da API. O frontend tem o próprio Dockerfile e compose, no repositório irmão. Os dois containers ficam separados e se enxergam pela rede Docker `biblioteca-net`, criada uma vez.
+Com o Docker não é preciso instalar Java nem Maven. O `Dockerfile` e o `docker-compose.yml` deste repositório cuidam só da API. O frontend tem os próprios, no repositório irmão `biblioteca-web-frontend`. Os dois containers ficam separados e se encontram pela rede Docker `biblioteca-net`.
+
+### Subir a API (docker compose up)
 
 ```bash
-docker network create biblioteca-net    # uma vez
-docker compose up -d --build            # builda a imagem e sobe a API em http://localhost:8080
-./scripts/build-image.sh                # gera a imagem e salva em images/*.tar.gz (com .sha256)
-./scripts/load-images.sh                # carrega esses arquivos em outra máquina
+docker network create biblioteca-net   # uma vez por máquina; se ela já existir, o erro pode ser ignorado
+docker compose up -d --build           # builda a imagem e sobe a API
 ```
 
-Variáveis, fuso horário e como subir junto com o frontend em [Docker do backend](docs/docker/imagens-e-stack.md).
+A API fica em `http://localhost:8080` (Swagger em `http://localhost:8080/swagger-ui/index.html`).
+
+Comandos úteis, rodados na pasta deste repositório:
+
+| Comando | Para que serve |
+| --- | --- |
+| `docker compose up -d` | Sobe usando a imagem que já existe (só builda se ela faltar). |
+| `docker compose up -d --build` | Rebuilda a imagem e sobe. Use depois de mudar o código. |
+| `docker compose ps` | Mostra o estado e o health do container. |
+| `docker compose logs -f` | Acompanha os logs. |
+| `docker compose down` | Derruba a API (os dados do H2 somem). |
+
+Para publicar em outra porta: `BACKEND_PORT=9080 docker compose up -d`. Outras variáveis (ambiente ou `.env` ao lado do compose): `APP_CORS_ALLOWED_ORIGINS`, `JAVA_OPTS` e `BACKEND_TZ` (padrão `America/Sao_Paulo`).
+
+### Subir o sistema completo (API + site)
+
+Os dois repositórios lado a lado, cada um com o próprio compose:
+
+```bash
+docker network create biblioteca-net                              # uma vez por máquina
+docker compose up -d --build                                      # aqui: API em http://localhost:8080
+(cd ../biblioteca-web-frontend && docker compose up -d --build)   # site em http://localhost:8081
+```
+
+A ordem não importa. Os dados ficam em memória: voltam ao padrão (seed) a cada subida. Para derrubar, rode `docker compose down` nos dois repositórios.
+
+### Gerar a imagem e levar para outra máquina
+
+```bash
+./scripts/build-image.sh     # gera images/library-backend_<tag>.tar.gz e o .sha256
+./scripts/load-images.sh     # na outra máquina: confere o checksum e carrega (docker load)
+docker network create biblioteca-net
+docker compose up -d         # usa a imagem carregada, sem rebuildar
+```
+
+Copie para a outra máquina a pasta `images/`, o `docker-compose.yml` e o `scripts/load-images.sh`.
+
+Variáveis do compose, fuso horário e problemas comuns: [Docker do backend](docs/docker/imagens-e-stack.md).
 
 ## Estrutura do projeto
 
